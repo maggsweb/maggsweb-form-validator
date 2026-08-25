@@ -1,16 +1,16 @@
- <?php
+<?php
+
+namespace Maggsweb;
+
 /**
  * MyFileValidator Class.
  *
  * @category  File Upload Validation
  *
  * @author    Chris Maggs <git@maggsweb.co.uk>
- * @copyright Copyright (c)2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- *
- * @version   1.0
  **/
-class FileValidator
+class MyFileValidator
 {
     /*
      * $fieldname
@@ -59,11 +59,11 @@ class FileValidator
     public $deny;
 
     /*
-     * $maxfilesize
-     * @desc maximum upload file size (in bytes) or false;
+     * $maxFilesize
+     * @desc maximum upload file size (in Mb) or false;
      * @var int
      */
-    public $maxfilesize;
+    public $maxFilesize;
 
     /*
      * $uploadError
@@ -73,7 +73,7 @@ class FileValidator
     public $uploadError;
 
     /**
-     * FileValidator constructor.
+     * MyFileValidator constructor.
      *
      * @param string $fieldname
      */
@@ -89,7 +89,7 @@ class FileValidator
         $this->maxFilesize = 10;  // 10Mb
         $this->uploadError = false;
         $this->allow = false;
-        $this->disallow = false;
+        $this->deny = false;
     }
 
     /**

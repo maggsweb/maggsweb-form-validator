@@ -1,7 +1,9 @@
- <?php
+<?php
 
-include 'FormValidator.php';
-include 'FileValidator.php';
+require 'vendor/autoload.php';
+
+use Maggsweb\MyFileValidator;
+use Maggsweb\MyFormValidator;
 
 // Form Validation
 //-----------------------------------------------------------
@@ -13,8 +15,7 @@ if (isset($_POST['frmName']) && $_POST['frmName'] == 'example') {
      *
      * Flag form as 'POST'
      */
-    $formVal = new FormValidator();
-    $formVal->setMethod('post');
+    $formVal = new MyFormValidator('post');
 
     /*
      * Text Input
@@ -103,10 +104,10 @@ if (isset($_POST['frmName']) && $_POST['frmName'] == 'example') {
     $options = [];
     $options['path'] = 'uploads/';
     $options['allow'] = ['txt'];
-    $options['disallow'] = ['pdf'];
+    $options['deny'] = ['pdf'];
     $options['maxFilesize'] = 1; // 1Mb
 
-    $fileUpload = new FileValidator('fileupload');
+    $fileUpload = new MyFileValidator('fileupload');
     $fileUpload->setOptions($options);
 
     if ($fileUpload->uploadFile()) {

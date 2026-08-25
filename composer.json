@@ -1,0 +1,21 @@
+{
+    "name": "maggsweb/maggsweb-form-validator",
+    "description": "An easy-to-use PHP Form Validation Class",
+    "type": "library",
+    "keywords": ["php","form","validation"],
+    "license": "gpl-3.0",
+    "authors": [
+        {
+            "name": "Chris Maggs",
+            "email": "git@maggsweb.co.uk"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "autoload": {
+        "classmap": [
+            "src/"
+        ]
+    }
+}

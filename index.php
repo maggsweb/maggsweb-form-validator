@@ -1,11 +1,14 @@
 <?php
 
+require 'vendor/autoload.php';
+
+use Maggsweb\MyFormValidator;
+
 /**
- * Instantiate the FormValidator for use
+ * Instantiate the MyFormValidator for use
  * Flag method as POST.
  */
-$formVal = new FormValidator();
-$formVal->setMethod('post');
+$formVal = new MyFormValidator('post');
 
 // ----------------------------------------------------------------
 // Validation Process Methods  ------------------------------------

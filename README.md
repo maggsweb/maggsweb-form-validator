@@ -7,12 +7,19 @@ An easy-to-use PHP Form Validation Class
 <hr>
 
 ### Table of Contents
+**[Installation](#installation)**  
 **[Initialization](#initialization)**  
 **[Validation Methods](#validation-methods)**  
 **[File Upload Method](#file-upload-method)**  
 **[Return Methods](#return-methods)**  
 
 <hr>
+
+## Installation
+
+```
+composer require maggsweb/maggsweb-form-validator
+```
 
 ## Initialization
 
@@ -22,14 +29,15 @@ Fields are registered within the class, so that Validation methods can be perfor
 
 ```php
 
-require_once ('MyFormValidator.php');
+require 'vendor/autoload.php';
+
+use Maggsweb\MyFormValidator;
 
 /**
- * Instantiate the FormValidator for use
+ * Instantiate the MyFormValidator for use
  * Flag method as POST
  */
-$formVal = new FormValidator();
-$formVal->setMethod('post');
+$formVal = new MyFormValidator('post');
 
 ```
 
@@ -102,7 +110,7 @@ Optional validation of file uploads
 $options = [];
 $options['path']          = 'uploads/';
 $options['allow']         = array('txt');
-$options['disallow']      = array('pdf');
+$options['deny']          = array('pdf');
 $options['maxFilesize']   = 1; // 1Mb
 
 /**
@@ -111,7 +119,7 @@ $options['maxFilesize']   = 1; // 1Mb
  *  or a success message
  */
 
-$fileUpload = new FileValidator('fileupload');
+$fileUpload = new \Maggsweb\MyFileValidator('fileupload');
 $fileUpload->setOptions($options);
 
 if($fileUpload->uploadFile()){

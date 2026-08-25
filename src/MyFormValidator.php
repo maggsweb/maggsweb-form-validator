@@ -1,16 +1,16 @@
- <?php
+<?php
+
+namespace Maggsweb;
+
 /**
  * MyFormValidator Class.
  *
  * @category  Form Validation
  *
  * @author    Chris Maggs <git@maggsweb.co.uk>
- * @copyright Copyright (c)2018
  * @license   http://opensource.org/licenses/gpl-3.0.html GNU Public License
- *
- * @version   1.1
  **/
-class FormValidator
+class MyFormValidator
 {
     /**
      * @var string
@@ -33,33 +33,27 @@ class FormValidator
     public $fields = [];
 
     /**
-     * FormValidator constructor.
+     * MyFormValidator constructor.
+     *
+     * @param string $method
      */
-    public function __construct()
+    public function __construct($method = 'get')
     {
-        $this->setMethod();
-
-        $this->_registerFields();
+        $this->setMethod($method);
     }
 
     // PRIVATE METHODS  /////////////////////////////////////////////////////////////////
 
     /**
-     * Set form fields.
+     * Set form fields, defaulting each registered field to an empty value.
      */
     private function _registerFields()
     {
+        $this->fields = [];
+
         if (is_array($this->method)) {
-            foreach ($this->method as $key => $tmp) {
-                if (is_array($tmp)) {
-                    $this->fields[$key] = [];
-                } else {
-                    if (isset($this->fields[$key])) {
-                        $this->fields[$key] = $this->method[$tmp];
-                    } else {
-                        $this->fields[$key] = '';
-                    }
-                }
+            foreach ($this->method as $key => $value) {
+                $this->fields[$key] = is_array($value) ? [] : '';
             }
         }
     }
@@ -67,16 +61,19 @@ class FormValidator
     // PUBLIC METHODS  /////////////////////////////////////////////////////////////////
 
     /**
-     * Set form method.
+     * Set form method, and re-register fields from it.
      *
      * @param string $method
+     *
+     * @return $this
      */
     public function setMethod($method = 'get')
     {
-        if (trim(strtolower($method)) == 'post') {
-            $this->method = $_POST;
-        }
-        $this->method = $_GET;
+        $this->method = trim(strtolower($method)) == 'post' ? $_POST : $_GET;
+
+        $this->_registerFields();
+
+        return $this;
     }
 
     /**
@@ -131,7 +128,7 @@ class FormValidator
             // Sanitise field
             $cleanInput = $this->method[$this->field];
             $cleanInput = trim($cleanInput);
-            $cleanInput = filter_var($cleanInput, FILTER_SANITIZE_STRING);
+            $cleanInput = strip_tags($cleanInput);
 
             // Overwrite with clean value
             $this->fields[$this->field] = $cleanInput;
@@ -166,8 +163,8 @@ class FormValidator
             if (filter_var($EMAIL, FILTER_VALIDATE_EMAIL) === false) {
                 $this->errors[$this->field] = 'Email address is invalid';
             }
+            $this->fields[$this->field] = strtolower($EMAIL);
         }
-        $this->fields[$this->field] = strtolower($EMAIL);
 
         return $this;
     }
@@ -182,8 +179,8 @@ class FormValidator
             if (filter_var($URL, FILTER_VALIDATE_URL) === false) {
                 $this->errors[$this->field] = 'URL is invalid';
             }
+            $this->fields[$this->field] = strtolower($URL);
         }
-        $this->fields[$this->field] = strtolower($URL);
 
         return $this;
     }
