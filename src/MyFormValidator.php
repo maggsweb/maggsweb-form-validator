@@ -126,6 +126,9 @@ class MyFormValidator
             $cleanInput = $this->method[$this->field];
             $cleanInput = trim($cleanInput);
             $cleanInput = strip_tags($cleanInput);
+            // Escape quotes only, so values remain safe inside an HTML attribute
+            // without corrupting '&' in URLs/emails ahead of isURL()/isEmail().
+            $cleanInput = str_replace(['"', "'"], ['&quot;', '&#039;'], $cleanInput);
 
             // Overwrite with clean value
             $this->fields[$this->field] = $cleanInput;
@@ -140,7 +143,9 @@ class MyFormValidator
     public function isRequired(): static
     {
         if (isset($this->method[$this->field])) {
-            if (!strlen($this->method[$this->field])) {
+            $value = $this->fields[$this->field];
+            $isEmpty = is_array($value) ? empty($value) : !strlen($value);
+            if ($isEmpty) {
                 $this->errors[$this->field] = 'This field is required';
             }
         } else {
@@ -173,7 +178,9 @@ class MyFormValidator
     {
         if (isset($this->method[$this->field])) {
             $URL = filter_var($this->fields[$this->field], FILTER_SANITIZE_URL);
-            if (filter_var($URL, FILTER_VALIDATE_URL) === false) {
+            $scheme = strtolower((string) parse_url($URL, PHP_URL_SCHEME));
+
+            if (filter_var($URL, FILTER_VALIDATE_URL) === false || !in_array($scheme, ['http', 'https'], true)) {
                 $this->errors[$this->field] = 'URL is invalid';
             }
             $this->fields[$this->field] = strtolower($URL);
