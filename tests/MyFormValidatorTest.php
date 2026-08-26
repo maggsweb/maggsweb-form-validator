@@ -89,7 +89,7 @@ class MyFormValidatorTest extends TestCase
         $formVal = new MyFormValidator('post');
         $formVal->validate('interests')->clean();
 
-        $this->assertSame(['PHP', 'MySQL', "OOP&#039;"], $formVal->getFields()['interests']);
+        $this->assertSame(['PHP', 'MySQL', 'OOP&#039;'], $formVal->getFields()['interests']);
     }
 
     public function testCleanOnMissingFieldIsNoOp(): void
@@ -178,9 +178,9 @@ class MyFormValidatorTest extends TestCase
     public static function validEmailProvider(): array
     {
         return [
-            'simple' => ['chris@example.com'],
+            'simple'    => ['chris@example.com'],
             'subdomain' => ['chris@mail.example.co.uk'],
-            'plus-tag' => ['chris+tag@example.com'],
+            'plus-tag'  => ['chris+tag@example.com'],
         ];
     }
 
@@ -198,8 +198,8 @@ class MyFormValidatorTest extends TestCase
     public static function invalidEmailProvider(): array
     {
         return [
-            'no-at' => ['chrisexample.com'],
-            'no-domain' => ['chris@'],
+            'no-at'           => ['chrisexample.com'],
+            'no-domain'       => ['chris@'],
             'single-char-tld' => ['chris@example.c'],
         ];
     }
