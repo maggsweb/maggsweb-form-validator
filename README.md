@@ -9,6 +9,7 @@ An easy-to-use PHP Form Validation Class
 ### Table of Contents
 **[Installation](#installation)**  
 **[Initialization](#initialization)**  
+**[CSRF Protection](#csrf-protection)**  
 **[Validation Methods](#validation-methods)**  
 **[File Upload Method](#file-upload-method)**  
 **[Return Methods](#return-methods)**  
@@ -38,6 +39,38 @@ use Maggsweb\MyFormValidator;
  * Flag method as POST
  */
 $formVal = new MyFormValidator('post');
+
+```
+
+## CSRF Protection
+
+Requires an active session - `session_start()` must be called before the token is generated or checked.
+
+Generate a token to render as a hidden field on the form:
+
+```php
+
+session_start();
+
+$csrfToken = MyFormValidator::generateCsrfToken();
+
+```
+
+```html
+<input type="hidden" name="csrf_token" value="<?=$csrfToken ?>" />
+```
+
+On submission, check it before trusting any other submitted data:
+
+```php
+
+$formVal = new MyFormValidator('post');
+
+if ($formVal->isValidCsrfToken()) {
+    // ...proceed with the rest of validation
+} else {
+    // Token missing/invalid - $formVal->getErrors() now contains a 'csrf_token' message
+}
 
 ```
 
@@ -88,8 +121,9 @@ $formVal->validate('age')->isNumber();
 
 /**
  * Ensure that X number of check-box options have been selected
+ * clean() sanitises each selected value in the array
  */
-$formVal->validate('some-checkbox-group-name')->checkboxGroupRequired(2);
+$formVal->validate('some-checkbox-group-name')->clean()->checkboxGroupRequired(2);
 
 ```
 
@@ -98,7 +132,8 @@ $formVal->validate('some-checkbox-group-name')->checkboxGroupRequired(2);
 
 ## File Upload Method
 
-Optional validation of file uploads
+File uploads are optional by default - if no file is submitted, `uploadFile()` simply
+returns `false` without recording an error. Call `isRequired()` to make the field mandatory.
 
 ```php
 
@@ -119,8 +154,15 @@ $options['maxFilesize']   = 1; // 1Mb
  *  or a success message
  */
 
-$fileUpload = new \Maggsweb\MyFileValidator('fileupload');
+$fileUpload = new MyFileValidator('fileupload');
 $fileUpload->setOptions($options);
+
+/**
+ * Optional
+ * --------
+ * Flag the file upload as mandatory
+ */
+//$fileUpload->isRequired();
 
 if($fileUpload->uploadFile()){
     $fields['fileupload'] = $fileUpload->getSuccess();
