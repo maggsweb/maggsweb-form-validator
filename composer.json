@@ -17,5 +17,16 @@
         "classmap": [
             "src/"
         ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Maggsweb\\Tests\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11"
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }

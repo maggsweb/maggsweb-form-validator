@@ -181,13 +181,27 @@ class MyFileValidator
         }
 
         // Copy Files
-        if (!move_uploaded_file($this->fileArray['tmp_name'], $this->path.$this->fileName.'.'.$this->fileExtension)) {
+        if (!$this->_moveUploadedFile($this->fileArray['tmp_name'], $this->path.$this->fileName.'.'.$this->fileExtension)) {
             $this->uploadError = 104;
 
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Move the uploaded file into place. Extracted so it can be overridden in tests,
+     * since move_uploaded_file() only ever succeeds for a genuine HTTP file upload.
+     *
+     * @param string $tmpName
+     * @param string $destination
+     *
+     * @return bool
+     */
+    protected function _moveUploadedFile(string $tmpName, string $destination): bool
+    {
+        return move_uploaded_file($tmpName, $destination);
     }
 
     /**
