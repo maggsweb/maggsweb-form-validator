@@ -13,74 +13,75 @@ namespace Maggsweb;
 class MyFileValidator
 {
     /*
-     * $fieldname
-     * @desc Form field name
-     * @var string
-     */
-    private $fieldname;
-    /*
      * $fileArray
      * @desc Global uploaded file array
      * @var array
      */
     private $fileArray;
+
     /*
      * $fileName
      * @desc cleaned generated filename
      * @var string
      */
-    private $fileName;
+    private string $fileName;
     /*
      * $fileExtension
      * @desc lowercase file extension
      * @var string
      */
-    private $fileExtension;
+    private string $fileExtension;
 
     /*
      * $path
      * @desc Absolute path to writable directory
      * @var string
      */
-    public $path;
+    public string $path;
 
     /*
      * $allow
      * @desc Array of file extensions to 'allow'
-     * @var array
+     * @var array|bool
      */
-    public $allow;
+    public array|bool $allow;
 
     /*
      * $deny
      * @desc Array of file extensions to 'deny'
-     * @var array
+     * @var array|bool
      */
-    public $deny;
+    public array|bool $deny;
 
     /*
      * $maxFilesize
      * @desc maximum upload file size (in Mb) or false;
      * @var int
      */
-    public $maxFilesize;
+    public int $maxFilesize;
 
     /*
      * $uploadError
      * @param $fieldname
-     * @var string
+     * @var int|false
      */
-    public $uploadError;
+    public int|false $uploadError;
+
+    /*
+     * $required
+     * @desc Whether a file upload is mandatory
+     * @var bool
+     */
+    private bool $required = false;
 
     /**
      * MyFileValidator constructor.
      *
      * @param string $fieldname
      */
-    public function __construct($fieldname)
+    public function __construct(string $fieldname)
     {
-        $this->fieldname = $fieldname;
-        $this->fileArray = $_FILES[$fieldname];
+        $this->fileArray = $_FILES[$fieldname] ?? ['error' => UPLOAD_ERR_NO_FILE, 'name' => '', 'tmp_name' => '', 'size' => 0];
         $this->fileName = $this->_cleanFilename();
         $this->fileExtension = $this->_fileExtension();
 
@@ -95,15 +96,36 @@ class MyFileValidator
     /**
      * @param array $optionsArray
      */
-    public function setOptions(array $optionsArray)
+    public function setOptions(array $optionsArray): void
     {
         foreach ($optionsArray as $name => $value) {
             $this->$name = $value;
         }
     }
 
-    public function uploadFile()
+    /**
+     * Flag the file upload as mandatory.
+     *
+     * @return $this
+     */
+    public function isRequired(): static
     {
+        $this->required = true;
+
+        return $this;
+    }
+
+    public function uploadFile(): bool
+    {
+
+        // No file was submitted
+        if ($this->fileArray['error'] === UPLOAD_ERR_NO_FILE) {
+            if ($this->required) {
+                $this->uploadError = UPLOAD_ERR_NO_FILE;
+            }
+
+            return false;
+        }
 
         // File upload error
         if ($this->fileArray['error']) {
@@ -172,12 +194,12 @@ class MyFileValidator
     /**
      * @return string
      */
-    public function getSuccess()
+    public function getSuccess(): string
     {
         return "{$this->fileName}.{$this->fileExtension} was successfully uploaded";
     }
 
-    private function makeUniqueFilename()
+    private function makeUniqueFilename(): void
     {
         // Create new filename with numeric part
         $this->fileName .= '_1';
@@ -190,7 +212,7 @@ class MyFileValidator
     /**
      * @param int $digit
      */
-    private function incrementFilename($digit)
+    private function incrementFilename(int $digit): void
     {
         // New incremented filename
         $tmp = explode('_', $this->fileName);
@@ -207,7 +229,7 @@ class MyFileValidator
     /**
      * @return bool|string
      */
-    public function getError()
+    public function getError(): bool|string
     {
         return $this->_getErrorMessage($this->uploadError);
     }
@@ -217,32 +239,29 @@ class MyFileValidator
      *
      * @return bool|string
      */
-    private function _getErrorMessage($errorNumber)
+    private function _getErrorMessage(int $errorNumber): bool|string
     {
-        switch ($errorNumber) {
-            // Standard File Upload errors
-            case 1:  return 'The uploaded file exceeds the UPLOAD_MAX_FILESIZE directive in php.ini.';
-            case 2:  return 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.';
-            case 3:  return 'The uploaded file was only partially uploaded.';
-            case 4:  return 'No file was uploaded.';
-            case 6:  return 'Missing a temporary folder.';
-            case 7:  return 'Failed to write file to disk.';
-            case 8:  return 'A PHP extension stopped the file upload.';
-            // Additional check errors
-            case 100: return "The directory '$this->path' was not found";
-            case 101: return "The directory '$this->path' is not writable";
-            case 102: return "The uploaded file extension '$this->fileExtension' is not allowed";
-            case 103: return "The uploaded file exceeded the allowed filesize of {$this->maxFilesize}Mb";
-            case 104: return 'Error moving unloaded file';
-
-            default: return false;
-        }
+        return match ($errorNumber) {
+            1 => 'The uploaded file exceeds the UPLOAD_MAX_FILESIZE directive in php.ini.',
+            2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+            3 => 'The uploaded file was only partially uploaded.',
+            4 => 'No file was uploaded.',
+            6 => 'Missing a temporary folder.',
+            7 => 'Failed to write file to disk.',
+            8 => 'A PHP extension stopped the file upload.',
+            100 => "The directory '$this->path' was not found",
+            101 => "The directory '$this->path' is not writable",
+            102 => "The uploaded file extension '$this->fileExtension' is not allowed",
+            103 => "The uploaded file exceeded the allowed filesize of {$this->maxFilesize}Mb",
+            104 => 'Error moving unloaded file',
+            default => false,
+        };
     }
 
     /**
      * @return string
      */
-    private function _cleanFilename()
+    private function _cleanFilename(): string
     {
         $fileNameArray = explode('.', $this->fileArray['name']);
 
@@ -260,7 +279,7 @@ class MyFileValidator
     /**
      * @return string
      */
-    private function _fileExtension()
+    private function _fileExtension(): string
     {
         $fileNameArray = explode('.', $this->fileArray['name']);
 

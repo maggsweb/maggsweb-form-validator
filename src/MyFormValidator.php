@@ -176,20 +176,32 @@ class MyFormValidator
         $this->_requireFieldSet();
 
         if (isset($this->method[$this->field])) {
+            $value = $this->method[$this->field];
 
-            // Sanitise field
-            $cleanInput = $this->method[$this->field];
-            $cleanInput = trim($cleanInput);
-            $cleanInput = strip_tags($cleanInput);
-            // Escape quotes only, so values remain safe inside an HTML attribute
-            // without corrupting '&' in URLs/emails ahead of isURL()/isEmail().
-            $cleanInput = str_replace(['"', "'"], ['&quot;', '&#039;'], $cleanInput);
-
-            // Overwrite with clean value
-            $this->fields[$this->field] = $cleanInput;
+            // Overwrite with clean value(s); checkbox/multi-select groups arrive as arrays
+            $this->fields[$this->field] = is_array($value)
+                ? array_map([$this, '_sanitize'], $value)
+                : $this->_sanitize($value);
         }
 
         return $this;
+    }
+
+    /**
+     * Sanitise a single scalar input value.
+     *
+     * @param string $value
+     *
+     * @return string
+     */
+    private function _sanitize(string $value): string
+    {
+        $value = trim($value);
+        $value = strip_tags($value);
+
+        // Escape quotes only, so values remain safe inside an HTML attribute
+        // without corrupting '&' in URLs/emails ahead of isURL()/isEmail().
+        return str_replace(['"', "'"], ['&quot;', '&#039;'], $value);
     }
 
     /**
@@ -343,5 +355,50 @@ class MyFormValidator
         }
 
         return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //  CSRF Protection   //////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Return the CSRF token for the current session, generating one if none exists yet,
+     * so it stays stable across repeated renders of the same form (e.g. after a failed
+     * validation). Embed the return value in a hidden form field.
+     *
+     * Requires an active session (session_start() must already have been called).
+     *
+     * @return string
+     */
+    public static function generateCsrfToken(): string
+    {
+        if (empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+
+        return $_SESSION['csrf_token'];
+    }
+
+    /**
+     * Validate a submitted CSRF token against the one stored in the session.
+     * Records an error against $fieldName on failure.
+     *
+     * Requires an active session (session_start() must already have been called).
+     *
+     * @param string $fieldName
+     *
+     * @return bool
+     */
+    public function isValidCsrfToken(string $fieldName = 'csrf_token'): bool
+    {
+        $submitted = $this->method[$fieldName] ?? '';
+
+        $isValid = !empty($_SESSION['csrf_token']) && is_string($submitted) && hash_equals($_SESSION['csrf_token'], $submitted);
+
+        if (!$isValid) {
+            $this->errors[$fieldName] = 'Your session has expired, please try again';
+        }
+
+        return $isValid;
     }
 }
