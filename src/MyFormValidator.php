@@ -2,6 +2,8 @@
 
 namespace Maggsweb;
 
+use LogicException;
+
 /**
  * MyFormValidator Class.
  *
@@ -20,17 +22,17 @@ class MyFormValidator
     /**
      * @var string
      */
-    private string $field;
+    private string $field = '';
 
     /**
      * @var array
      */
-    public array $errors = [];
+    private array $errors = [];
 
     /**
      * @var array
      */
-    public array $fields = [];
+    private array $fields = [];
 
     /**
      * MyFormValidator constructor.
@@ -52,6 +54,18 @@ class MyFormValidator
         $this->fields = [];
         foreach ($this->method as $key => $value) {
             $this->fields[$key] = is_array($value) ? [] : '';
+        }
+    }
+
+    /**
+     * Guard against validation methods being called before validate().
+     *
+     * @throws LogicException
+     */
+    private function _requireFieldSet(): void
+    {
+        if ($this->field === '') {
+            throw new LogicException('validate($field) must be called before any validation method.');
         }
     }
 
@@ -94,6 +108,26 @@ class MyFormValidator
     }
 
     /**
+     * Whether any validation errors have been recorded.
+     *
+     * @return bool
+     */
+    public function hasErrors(): bool
+    {
+        return !empty($this->errors);
+    }
+
+    /**
+     * Whether all validation performed so far has passed.
+     *
+     * @return bool
+     */
+    public function isValid(): bool
+    {
+        return !$this->hasErrors();
+    }
+
+    /**
      * @param string $field
      *
      * @return $this
@@ -120,6 +154,8 @@ class MyFormValidator
      */
     public function clean(): static
     {
+        $this->_requireFieldSet();
+
         if (isset($this->method[$this->field])) {
 
             // Sanitise field
@@ -142,6 +178,8 @@ class MyFormValidator
      */
     public function isRequired(): static
     {
+        $this->_requireFieldSet();
+
         if (isset($this->method[$this->field])) {
             $value = $this->fields[$this->field];
             $isEmpty = is_array($value) ? empty($value) : !strlen($value);
@@ -160,6 +198,8 @@ class MyFormValidator
      */
     public function isEmail(): static
     {
+        $this->_requireFieldSet();
+
         if (isset($this->method[$this->field])) {
             $EMAIL = filter_var($this->fields[$this->field], FILTER_SANITIZE_EMAIL);
             if (filter_var($EMAIL, FILTER_VALIDATE_EMAIL) === false) {
@@ -176,6 +216,8 @@ class MyFormValidator
      */
     public function isURL(): static
     {
+        $this->_requireFieldSet();
+
         if (isset($this->method[$this->field])) {
             $URL = filter_var($this->fields[$this->field], FILTER_SANITIZE_URL);
             $scheme = strtolower((string) parse_url($URL, PHP_URL_SCHEME));
@@ -190,17 +232,21 @@ class MyFormValidator
     }
 
     /**
+     * Validates the field as an integer (decimal values are not accepted).
+     *
      * @param bool|array $withinRange
      *
      * @return $this
      */
     public function isNumber(bool|array $withinRange = false): static
     {
+        $this->_requireFieldSet();
+
         if (isset($this->method[$this->field])) {
             $NUMBER = $this->fields[$this->field];
 
             // Integer
-            if (!(filter_var($NUMBER, FILTER_VALIDATE_INT) === 0 || filter_var($NUMBER, FILTER_VALIDATE_INT))) {
+            if (filter_var($NUMBER, FILTER_VALIDATE_INT) === false) {
                 $this->errors[$this->field] = 'Value is not numeric';
 
                 return $this;
@@ -210,7 +256,7 @@ class MyFormValidator
             if (is_array($withinRange)) {
                 list($min, $max) = $withinRange;
                 if (filter_var($NUMBER, FILTER_VALIDATE_INT, ['options' => ['min_range'=>$min, 'max_range'=>$max]]) === false) {
-                    $this->errors[$this->field] = "Value is not with the range of $min - $max";
+                    $this->errors[$this->field] = "Value is not within the range of $min - $max";
                 }
             }
         }
@@ -227,6 +273,8 @@ class MyFormValidator
      */
     public function isPassword(int $minChar = 6, int $maxChar = 20, bool $forceUpperCase = false): static
     {
+        $this->_requireFieldSet();
+
         if ($maxChar <= $minChar) {
             $maxChar = $minChar + 6;
         }
@@ -244,7 +292,7 @@ class MyFormValidator
             }
             if ($forceUpperCase) {
                 if (!preg_match('/[A-Z]+/', $this->fields[$this->field])) {
-                    $this->errors[$this->field] = 'Passwords must contain an uppercase charcacter';
+                    $this->errors[$this->field] = 'Passwords must contain an uppercase character';
 
                     return $this;
                 }
@@ -261,6 +309,8 @@ class MyFormValidator
      */
     public function checkboxGroupRequired(int $requiredSelections = 1): static
     {
+        $this->_requireFieldSet();
+
         if (isset($this->method[$this->field])) {
             if (is_array($this->method[$this->field])) {
                 if (count($this->method[$this->field]) < $requiredSelections) {
