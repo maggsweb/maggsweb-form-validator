@@ -42,10 +42,10 @@ class MyFileValidatorTest extends TestCase
     private function fakeUploadedFile(array $overrides = []): array
     {
         return array_merge([
-            'name' => 'test.txt',
-            'error' => UPLOAD_ERR_OK,
+            'name'     => 'test.txt',
+            'error'    => UPLOAD_ERR_OK,
             'tmp_name' => $this->sourceFile,
-            'size' => filesize($this->sourceFile),
+            'size'     => filesize($this->sourceFile),
         ], $overrides);
     }
 
@@ -97,12 +97,12 @@ class MyFileValidatorTest extends TestCase
     public static function phpUploadErrorProvider(): array
     {
         return [
-            'ini size' => [UPLOAD_ERR_INI_SIZE, 'The uploaded file exceeds the UPLOAD_MAX_FILESIZE directive in php.ini.'],
-            'form size' => [UPLOAD_ERR_FORM_SIZE, 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.'],
-            'partial' => [UPLOAD_ERR_PARTIAL, 'The uploaded file was only partially uploaded.'],
+            'ini size'   => [UPLOAD_ERR_INI_SIZE, 'The uploaded file exceeds the UPLOAD_MAX_FILESIZE directive in php.ini.'],
+            'form size'  => [UPLOAD_ERR_FORM_SIZE, 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.'],
+            'partial'    => [UPLOAD_ERR_PARTIAL, 'The uploaded file was only partially uploaded.'],
             'no tmp dir' => [UPLOAD_ERR_NO_TMP_DIR, 'Missing a temporary folder.'],
             'cant write' => [UPLOAD_ERR_CANT_WRITE, 'Failed to write file to disk.'],
-            'extension' => [UPLOAD_ERR_EXTENSION, 'A PHP extension stopped the file upload.'],
+            'extension'  => [UPLOAD_ERR_EXTENSION, 'A PHP extension stopped the file upload.'],
         ];
     }
 
@@ -267,9 +267,9 @@ class MyFileValidatorTest extends TestCase
     {
         $fileUpload = new MyFileValidator('fileupload');
         $fileUpload->setOptions([
-            'path' => '/custom/path/',
-            'allow' => ['jpg', 'png'],
-            'deny' => ['exe'],
+            'path'        => '/custom/path/',
+            'allow'       => ['jpg', 'png'],
+            'deny'        => ['exe'],
             'maxFilesize' => 5,
         ]);
 
