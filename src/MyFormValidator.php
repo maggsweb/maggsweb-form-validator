@@ -219,7 +219,11 @@ class MyFormValidator
 
         if ($this->_hasValue()) {
             $EMAIL = filter_var($this->fields[$this->field], FILTER_SANITIZE_EMAIL);
-            if (filter_var($EMAIL, FILTER_VALIDATE_EMAIL) === false) {
+            $tld = strrchr($EMAIL, '.');
+
+            // FILTER_VALIDATE_EMAIL accepts single-character TLDs (e.g. "example.c"),
+            // which don't exist in real DNS; require at least 2 characters.
+            if (filter_var($EMAIL, FILTER_VALIDATE_EMAIL) === false || strlen($tld) < 3) {
                 $this->errors[$this->field] = 'Email address is invalid';
             }
             $this->fields[$this->field] = strtolower($EMAIL);
