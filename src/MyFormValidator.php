@@ -478,7 +478,7 @@ class MyFormValidator
         curl_setopt($ch, CURLOPT_URL, 'https://www.google.com/recaptcha/api/siteverify');
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-            'secret' => $secretKey,
+            'secret'   => $secretKey,
             'response' => $token,
         ]));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
