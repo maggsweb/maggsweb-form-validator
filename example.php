@@ -153,13 +153,17 @@ $csrfToken = MyFormValidator::generateCsrfToken();
 <pre style="background-color:#d6ffcc;padding: 10px; border: 1px dashed green;">
 FORM FIELDS
 
-<?php var_dump($fields); ?>
+<?php foreach ($fields as $fieldName => $fieldValue) { ?>
+ <?php echo $fieldName . ' = ' . $fieldValue . "\n"; ?>
+<?php } ?>
 </pre>
 
 <pre style="background-color:#ffaeae;padding: 10px; border: 1px dashed red;">
 FORM ERRORS
 
-<?php var_dump($errors); ?>
+<?php foreach ($errors as $fieldName => $fieldValue) { ?>
+ <?php echo $fieldName . ' = ' . $fieldValue . "\n"; ?>
+<?php } ?>
 </pre>
 
 <style type='text/css'>
@@ -251,13 +255,20 @@ for HTML 5 inline validation
 </form>
 
 
-<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
 <script type="text/javascript">
-$(document).ready(function(){
+document.addEventListener('DOMContentLoaded', function () {
     <?php if ($errors) { ?>
     <?php foreach ($errors as $fieldName => $message) { ?>
-    $("#<?=$fieldName ?>").addClass('error');
-    $("#<?=$fieldName ?>").after("<span class='errorMessage'><?=$message ?></span>");
+    {
+        const field = document.getElementById('<?=$fieldName ?>');
+        if (field) {
+            field.classList.add('error');
+            const errorMessage = document.createElement('span');
+            errorMessage.className = 'errorMessage';
+            errorMessage.textContent = '<?=$message ?>';
+            field.insertAdjacentElement('afterend', errorMessage);
+        }
+    }
     <?php } ?>
     <?php } ?>
 });
