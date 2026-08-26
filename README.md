@@ -10,6 +10,7 @@ An easy-to-use PHP Form Validation Class
 **[Installation](#installation)**  
 **[Initialization](#initialization)**  
 **[CSRF Protection](#csrf-protection)**  
+**[Google reCAPTCHA v3](#google-recaptcha-v3)**  
 **[Validation Methods](#validation-methods)**  
 **[File Upload Method](#file-upload-method)**  
 **[Return Methods](#return-methods)**  
@@ -72,6 +73,43 @@ if ($formVal->isValidCsrfToken()) {
     // Token missing/invalid - $formVal->getErrors() now contains a 'csrf_token' message
 }
 
+```
+
+## Google reCAPTCHA v3
+
+Validates a submitted token via a server-side curl request to Google's `siteverify`
+endpoint. See the [reCAPTCHA v3 docs](https://developers.google.com/recaptcha/docs/v3)
+for how to add the client-side script and generate the token.
+
+The secret key is **not** read from anywhere by this library - keep it out of version
+control (an environment variable / `.env` file loaded by your application) and pass it
+in yourself:
+
+```php
+
+/**
+ * $minScore         - reject tokens scoring below this (0.0 = likely bot, 1.0 = likely human)
+ * $allowedHostnames - reject tokens issued for a different hostname, or null to skip the check
+ * $expectedAction   - reject tokens from a different action name, or null to skip the check
+ * $fieldName        - POST/GET field the token was submitted in
+ */
+if ($formVal->isValidRecaptcha(
+    $secretKey,
+    0.5,
+    ['www.example.com'],
+    'submit',
+    'g-recaptcha-response'
+)) {
+    // ...proceed with the rest of validation
+} else {
+    // Failed - $formVal->getErrors() now contains a 'g-recaptcha-response' message
+}
+
+```
+
+```html
+<!-- Client-side: obtain a token and populate a hidden field before submit -->
+<input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response" />
 ```
 
 ## Validation Methods

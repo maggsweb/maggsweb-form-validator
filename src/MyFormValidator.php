@@ -402,4 +402,94 @@ class MyFormValidator
 
         return $isValid;
     }
+
+    ///////////////////////////////////////////////////////////////////////////////////////////
+    //  Google reCAPTCHA v3   //////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Validate a submitted reCAPTCHA v3 token against Google's siteverify endpoint.
+     *
+     * The secret key should come from outside version control (e.g. an environment
+     * variable or .env file loaded by the consuming application) and be passed in here -
+     * this library does not read it from anywhere itself.
+     *
+     * @see https://developers.google.com/recaptcha/docs/v3
+     *
+     * @param string      $secretKey        Secret key for the site, from the reCAPTCHA admin console
+     * @param float       $minScore         Minimum acceptable score (0.0 = likely bot, 1.0 = likely human)
+     * @param array|null  $allowedHostnames Hostnames the token's reported 'hostname' must match, or null to skip the check
+     * @param string|null $expectedAction   Action name the token's reported 'action' must match, or null to skip the check
+     * @param string      $fieldName        POST/GET field the token was submitted in
+     *
+     * @return bool
+     */
+    public function isValidRecaptcha(
+        string $secretKey,
+        float $minScore = 0.5,
+        ?array $allowedHostnames = null,
+        ?string $expectedAction = null,
+        string $fieldName = 'g-recaptcha-response'
+    ): bool {
+        $token = $this->method[$fieldName] ?? '';
+
+        if (!is_string($token) || $token === '') {
+            $this->errors[$fieldName] = 'Please complete the reCAPTCHA verification';
+
+            return false;
+        }
+
+        $response = $this->_verifyRecaptcha($secretKey, $token);
+
+        $isValid = ($response['success'] ?? false) === true
+            && ($response['score'] ?? 0) >= $minScore;
+
+        if ($isValid && $allowedHostnames !== null) {
+            $isValid = in_array($response['hostname'] ?? '', $allowedHostnames, true);
+        }
+
+        if ($isValid && $expectedAction !== null) {
+            $isValid = ($response['action'] ?? '') === $expectedAction;
+        }
+
+        if (!$isValid) {
+            // Deliberately generic - the individual failure reason (low score,
+            // hostname/action mismatch, Google-side rejection) isn't exposed to the submitter.
+            $this->errors[$fieldName] = 'reCAPTCHA verification failed, please try again';
+        }
+
+        return $isValid;
+    }
+
+    /**
+     * Call Google's siteverify endpoint and return the decoded response.
+     *
+     * Extracted so tests can override it with a canned response instead of making a
+     * real HTTP request.
+     *
+     * @param string $secretKey
+     * @param string $token
+     *
+     * @return array
+     */
+    protected function _verifyRecaptcha(string $secretKey, string $token): array
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://www.google.com/recaptcha/api/siteverify');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+            'secret' => $secretKey,
+            'response' => $token,
+        ]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        if ($response === false) {
+            return [];
+        }
+
+        return json_decode($response, true) ?? [];
+    }
 }

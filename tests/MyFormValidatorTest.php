@@ -4,6 +4,7 @@ namespace Maggsweb\Tests;
 
 use LogicException;
 use Maggsweb\MyFormValidator;
+use Maggsweb\Tests\Fixtures\TestableMyFormValidator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
@@ -503,5 +504,118 @@ class MyFormValidatorTest extends TestCase
         $formVal = new MyFormValidator('post');
 
         $this->assertTrue($formVal->isValidCsrfToken('my_token'));
+    }
+
+    // isValidRecaptcha() ------------------------------------------------------------------
+
+    public function testIsValidRecaptchaFailsWhenTokenNotSubmitted(): void
+    {
+        $formVal = new TestableMyFormValidator('post');
+
+        $this->assertFalse($formVal->isValidRecaptcha('secret'));
+        $this->assertArrayHasKey('g-recaptcha-response', $formVal->getErrors());
+    }
+
+    public function testIsValidRecaptchaFailsWhenTokenIsEmptyString(): void
+    {
+        $_POST['g-recaptcha-response'] = '';
+
+        $formVal = new TestableMyFormValidator('post');
+
+        $this->assertFalse($formVal->isValidRecaptcha('secret'));
+        $this->assertArrayHasKey('g-recaptcha-response', $formVal->getErrors());
+    }
+
+    public function testIsValidRecaptchaPassesWithSuccessfulHighScoreResponse(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.9, 'hostname' => 'example.com', 'action' => 'submit'];
+
+        $this->assertTrue($formVal->isValidRecaptcha('secret'));
+        $this->assertArrayNotHasKey('g-recaptcha-response', $formVal->getErrors());
+    }
+
+    public function testIsValidRecaptchaFailsWhenGoogleReportsFailure(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => false];
+
+        $this->assertFalse($formVal->isValidRecaptcha('secret'));
+        $this->assertArrayHasKey('g-recaptcha-response', $formVal->getErrors());
+    }
+
+    public function testIsValidRecaptchaFailsWhenScoreBelowMinimum(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.3];
+
+        $this->assertFalse($formVal->isValidRecaptcha('secret', 0.5));
+    }
+
+    public function testIsValidRecaptchaAcceptsCustomMinScore(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.3];
+
+        $this->assertTrue($formVal->isValidRecaptcha('secret', 0.2));
+    }
+
+    public function testIsValidRecaptchaFailsWhenHostnameNotInAllowedList(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.9, 'hostname' => 'evil.example'];
+
+        $this->assertFalse($formVal->isValidRecaptcha('secret', 0.5, ['example.com', 'www.example.com']));
+    }
+
+    public function testIsValidRecaptchaPassesWhenHostnameInAllowedList(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.9, 'hostname' => 'www.example.com'];
+
+        $this->assertTrue($formVal->isValidRecaptcha('secret', 0.5, ['example.com', 'www.example.com']));
+    }
+
+    public function testIsValidRecaptchaFailsWhenActionDoesNotMatchExpected(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.9, 'action' => 'login'];
+
+        $this->assertFalse($formVal->isValidRecaptcha('secret', 0.5, null, 'submit'));
+    }
+
+    public function testIsValidRecaptchaPassesWhenActionMatchesExpected(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.9, 'action' => 'submit'];
+
+        $this->assertTrue($formVal->isValidRecaptcha('secret', 0.5, null, 'submit'));
+    }
+
+    public function testIsValidRecaptchaSupportsCustomFieldName(): void
+    {
+        $_POST['my_recaptcha_token'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.9];
+
+        $this->assertTrue($formVal->isValidRecaptcha('secret', 0.5, null, null, 'my_recaptcha_token'));
+        $this->assertArrayNotHasKey('my_recaptcha_token', $formVal->getErrors());
     }
 }
