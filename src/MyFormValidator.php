@@ -13,31 +13,31 @@ namespace Maggsweb;
 class MyFormValidator
 {
     /**
-     * @var string
+     * @var array
      */
-    private $method;
+    private array $method;
 
     /**
      * @var string
      */
-    private $field;
+    private string $field;
 
     /**
      * @var array
      */
-    public $errors = [];
+    public array $errors = [];
 
     /**
      * @var array
      */
-    public $fields = [];
+    public array $fields = [];
 
     /**
      * MyFormValidator constructor.
      *
      * @param string $method
      */
-    public function __construct($method = 'get')
+    public function __construct(string $method = 'get')
     {
         $this->setMethod($method);
     }
@@ -47,14 +47,11 @@ class MyFormValidator
     /**
      * Set form fields, defaulting each registered field to an empty value.
      */
-    private function _registerFields()
+    private function _registerFields(): void
     {
         $this->fields = [];
-
-        if (is_array($this->method)) {
-            foreach ($this->method as $key => $value) {
-                $this->fields[$key] = is_array($value) ? [] : '';
-            }
+        foreach ($this->method as $key => $value) {
+            $this->fields[$key] = is_array($value) ? [] : '';
         }
     }
 
@@ -67,7 +64,7 @@ class MyFormValidator
      *
      * @return $this
      */
-    public function setMethod($method = 'get')
+    public function setMethod(string $method): static
     {
         $this->method = trim(strtolower($method)) == 'post' ? $_POST : $_GET;
 
@@ -81,7 +78,7 @@ class MyFormValidator
      *
      * @return array
      */
-    public function getErrors()
+    public function getErrors(): array
     {
         return $this->errors;
     }
@@ -91,7 +88,7 @@ class MyFormValidator
      *
      * @return array
      */
-    public function getFields()
+    public function getFields(): array
     {
         return $this->fields;
     }
@@ -101,7 +98,7 @@ class MyFormValidator
      *
      * @return $this
      */
-    public function validate($field)
+    public function validate(string $field): static
     {
         // Set original value on $this->fields
         if (isset($this->fields[$field])) {
@@ -121,7 +118,7 @@ class MyFormValidator
     /**
      * @return $this
      */
-    public function clean()
+    public function clean(): static
     {
         if (isset($this->method[$this->field])) {
 
@@ -140,7 +137,7 @@ class MyFormValidator
     /**
      * @return $this
      */
-    public function isRequired()
+    public function isRequired(): static
     {
         if (isset($this->method[$this->field])) {
             if (!strlen($this->method[$this->field])) {
@@ -156,7 +153,7 @@ class MyFormValidator
     /**
      * @return $this
      */
-    public function isEmail()
+    public function isEmail(): static
     {
         if (isset($this->method[$this->field])) {
             $EMAIL = filter_var($this->fields[$this->field], FILTER_SANITIZE_EMAIL);
@@ -172,7 +169,7 @@ class MyFormValidator
     /**
      * @return $this
      */
-    public function isURL()
+    public function isURL(): static
     {
         if (isset($this->method[$this->field])) {
             $URL = filter_var($this->fields[$this->field], FILTER_SANITIZE_URL);
@@ -186,11 +183,11 @@ class MyFormValidator
     }
 
     /**
-     * @param bool $withinRange
+     * @param bool|array $withinRange
      *
      * @return $this
      */
-    public function isNumber($withinRange = false)
+    public function isNumber(bool|array $withinRange = false): static
     {
         if (isset($this->method[$this->field])) {
             $NUMBER = $this->fields[$this->field];
@@ -215,13 +212,13 @@ class MyFormValidator
     }
 
     /**
-     * @param int  $minChar
-     * @param int  $maxChar
+     * @param int $minChar
+     * @param int $maxChar
      * @param bool $forceUpperCase
      *
      * @return $this
      */
-    public function isPassword($minChar = 6, $maxChar = 20, $forceUpperCase = false)
+    public function isPassword(int $minChar = 6, int $maxChar = 20, bool $forceUpperCase = false): static
     {
         if ($maxChar <= $minChar) {
             $maxChar = $minChar + 6;
@@ -255,7 +252,7 @@ class MyFormValidator
      *
      * @return $this
      */
-    public function checkboxGroupRequired($requiredSelections = 1)
+    public function checkboxGroupRequired(int $requiredSelections = 1): static
     {
         if (isset($this->method[$this->field])) {
             if (is_array($this->method[$this->field])) {
