@@ -231,15 +231,20 @@ class MyFormValidator
         $this->_requireFieldSet();
 
         if ($this->_hasValue()) {
-            $EMAIL = filter_var($this->fields[$this->field], FILTER_SANITIZE_EMAIL);
+            // Validate the value as submitted - not a FILTER_SANITIZE_EMAIL'd
+            // copy, which silently strips illegal characters (e.g. the space
+            // in "some one@example.com") and would validate the *repaired*
+            // string instead of rejecting what the visitor actually typed.
+            $EMAIL = $this->fields[$this->field];
             $tld = strrchr($EMAIL, '.');
 
             // FILTER_VALIDATE_EMAIL accepts single-character TLDs (e.g. "example.c"),
             // which don't exist in real DNS; require at least 2 characters.
             if (filter_var($EMAIL, FILTER_VALIDATE_EMAIL) === false || strlen($tld) < 3) {
                 $this->errors[$this->field] = 'Email address is invalid';
+            } else {
+                $this->fields[$this->field] = strtolower($EMAIL);
             }
-            $this->fields[$this->field] = strtolower($EMAIL);
         }
 
         return $this;
