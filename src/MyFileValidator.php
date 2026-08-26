@@ -117,7 +117,6 @@ class MyFileValidator
 
     public function uploadFile(): bool
     {
-
         // No file was submitted
         if ($this->fileArray['error'] === UPLOAD_ERR_NO_FILE) {
             if ($this->required) {
@@ -242,18 +241,18 @@ class MyFileValidator
     private function _getErrorMessage(int $errorNumber): bool|string
     {
         return match ($errorNumber) {
-            1 => 'The uploaded file exceeds the UPLOAD_MAX_FILESIZE directive in php.ini.',
-            2 => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
-            3 => 'The uploaded file was only partially uploaded.',
-            4 => 'No file was uploaded.',
-            6 => 'Missing a temporary folder.',
-            7 => 'Failed to write file to disk.',
-            8 => 'A PHP extension stopped the file upload.',
-            100 => "The directory '$this->path' was not found",
-            101 => "The directory '$this->path' is not writable",
-            102 => "The uploaded file extension '$this->fileExtension' is not allowed",
-            103 => "The uploaded file exceeded the allowed filesize of {$this->maxFilesize}Mb",
-            104 => 'Error moving unloaded file',
+            1       => 'The uploaded file exceeds the UPLOAD_MAX_FILESIZE directive in php.ini.',
+            2       => 'The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form.',
+            3       => 'The uploaded file was only partially uploaded.',
+            4       => 'No file was uploaded.',
+            6       => 'Missing a temporary folder.',
+            7       => 'Failed to write file to disk.',
+            8       => 'A PHP extension stopped the file upload.',
+            100     => "The directory '$this->path' was not found",
+            101     => "The directory '$this->path' is not writable",
+            102     => "The uploaded file extension '$this->fileExtension' is not allowed",
+            103     => "The uploaded file exceeded the allowed filesize of {$this->maxFilesize}Mb",
+            104     => 'Error moving unloaded file',
             default => false,
         };
     }

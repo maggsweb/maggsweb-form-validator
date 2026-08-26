@@ -73,6 +73,7 @@ class MyFormValidator
      * Whether the current field's value counts as empty.
      *
      * @param mixed $value
+     *
      * @return bool
      */
     private function _isEmpty(mixed $value): bool
@@ -298,8 +299,8 @@ class MyFormValidator
     }
 
     /**
-     * @param int $minChar
-     * @param int $maxChar
+     * @param int  $minChar
+     * @param int  $maxChar
      * @param bool $forceUpperCase
      *
      * @return $this
