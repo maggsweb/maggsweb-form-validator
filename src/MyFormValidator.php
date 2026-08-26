@@ -69,6 +69,25 @@ class MyFormValidator
         }
     }
 
+    /**
+     * Whether the current field's value counts as empty.
+     *
+     * @param mixed $value
+     * @return bool
+     */
+    private function _isEmpty(mixed $value): bool
+    {
+        return is_array($value) ? empty($value) : !strlen($value);
+    }
+
+    /**
+     * Whether the current field was submitted and has a non-empty value.
+     */
+    private function _hasValue(): bool
+    {
+        return isset($this->method[$this->field]) && !$this->_isEmpty($this->fields[$this->field]);
+    }
+
     // PUBLIC METHODS  /////////////////////////////////////////////////////////////////
 
     /**
@@ -181,9 +200,7 @@ class MyFormValidator
         $this->_requireFieldSet();
 
         if (isset($this->method[$this->field])) {
-            $value = $this->fields[$this->field];
-            $isEmpty = is_array($value) ? empty($value) : !strlen($value);
-            if ($isEmpty) {
+            if ($this->_isEmpty($this->fields[$this->field])) {
                 $this->errors[$this->field] = 'This field is required';
             }
         } else {
@@ -200,7 +217,7 @@ class MyFormValidator
     {
         $this->_requireFieldSet();
 
-        if (isset($this->method[$this->field])) {
+        if ($this->_hasValue()) {
             $EMAIL = filter_var($this->fields[$this->field], FILTER_SANITIZE_EMAIL);
             if (filter_var($EMAIL, FILTER_VALIDATE_EMAIL) === false) {
                 $this->errors[$this->field] = 'Email address is invalid';
@@ -218,7 +235,7 @@ class MyFormValidator
     {
         $this->_requireFieldSet();
 
-        if (isset($this->method[$this->field])) {
+        if ($this->_hasValue()) {
             $URL = filter_var($this->fields[$this->field], FILTER_SANITIZE_URL);
             $scheme = strtolower((string) parse_url($URL, PHP_URL_SCHEME));
 
@@ -242,7 +259,7 @@ class MyFormValidator
     {
         $this->_requireFieldSet();
 
-        if (isset($this->method[$this->field])) {
+        if ($this->_hasValue()) {
             $NUMBER = $this->fields[$this->field];
 
             // Integer
@@ -279,7 +296,7 @@ class MyFormValidator
             $maxChar = $minChar + 6;
         }
 
-        if (isset($this->method[$this->field])) {
+        if ($this->_hasValue()) {
             if (strlen($this->fields[$this->field]) < $minChar) {
                 $this->errors[$this->field] = "Passwords must be more than $minChar characters";
 
