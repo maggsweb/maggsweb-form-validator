@@ -436,10 +436,41 @@ class MyFormValidator
         ?string $expectedAction = null,
         string $fieldName = 'g-recaptcha-response'
     ): bool {
+        return $this->verifyRecaptcha($secretKey, $minScore, $allowedHostnames, $expectedAction, $fieldName);
+    }
+
+    /**
+     * Same checks as isValidRecaptcha(), but lets the caller choose which error key the
+     * failure is written to and the wording of the error messages.
+     *
+     * @see isValidRecaptcha()
+     *
+     * @param string      $secretKey        Secret key for the site, from the reCAPTCHA admin console
+     * @param float       $minScore         Minimum acceptable score (0.0 = likely bot, 1.0 = likely human)
+     * @param array|null  $allowedHostnames Hostnames the token's reported 'hostname' must match, or null to skip the check
+     * @param string|null $expectedAction   Action name the token's reported 'action' must match, or null to skip the check
+     * @param string      $fieldName        POST/GET field the token was submitted in
+     * @param string|null $errorKey         Key the error is written to in getErrors(), or null to use $fieldName
+     * @param string|null $missingMessage   Error when no token was submitted, or null for the default
+     * @param string|null $failedMessage    Error when verification fails, or null for the default
+     *
+     * @return bool
+     */
+    public function verifyRecaptcha(
+        string $secretKey,
+        float $minScore = 0.5,
+        ?array $allowedHostnames = null,
+        ?string $expectedAction = null,
+        string $fieldName = 'g-recaptcha-response',
+        ?string $errorKey = null,
+        ?string $missingMessage = null,
+        ?string $failedMessage = null
+    ): bool {
+        $errorKey ??= $fieldName;
         $token = $this->method[$fieldName] ?? '';
 
         if (!is_string($token) || $token === '') {
-            $this->errors[$fieldName] = 'Please complete the reCAPTCHA verification';
+            $this->errors[$errorKey] = $missingMessage ?? 'Please complete the reCAPTCHA verification';
 
             return false;
         }
@@ -460,7 +491,7 @@ class MyFormValidator
         if (!$isValid) {
             // Deliberately generic - the individual failure reason (low score,
             // hostname/action mismatch, Google-side rejection) isn't exposed to the submitter.
-            $this->errors[$fieldName] = 'reCAPTCHA verification failed, please try again';
+            $this->errors[$errorKey] = $failedMessage ?? 'reCAPTCHA verification failed, please try again';
         }
 
         return $isValid;
