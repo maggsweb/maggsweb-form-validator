@@ -107,6 +107,33 @@ if ($formVal->isValidRecaptcha(
 
 ```
 
+To write the error under a different key, or with your own wording, use
+`verifyRecaptcha()`. It runs the same checks and takes three extra arguments:
+
+```php
+
+/**
+ * $errorKey       - key the error is written to in getErrors(), or null to use $fieldName
+ * $missingMessage - error when no token was submitted, or null for the default
+ * $failedMessage  - error when verification fails, or null for the default
+ */
+if ($formVal->verifyRecaptcha(
+    $secretKey,
+    0.5,
+    ['www.example.com'],
+    'submit',
+    'g-recaptcha-response',
+    'frmContactForm',
+    'Please try submitting the form again',
+    'Your message has been flagged as spam'
+)) {
+    // ...proceed with the rest of validation
+} else {
+    // Failed - $formVal->getErrors() now contains a 'frmContactForm' message
+}
+
+```
+
 ```html
 <!-- Client-side: obtain a token and populate a hidden field before submit -->
 <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response" />

@@ -618,4 +618,68 @@ class MyFormValidatorTest extends TestCase
         $this->assertTrue($formVal->isValidRecaptcha('secret', 0.5, null, null, 'my_recaptcha_token'));
         $this->assertArrayNotHasKey('my_recaptcha_token', $formVal->getErrors());
     }
+
+    public function testIsValidRecaptchaUsesDefaultMissingTokenMessage(): void
+    {
+        $formVal = new TestableMyFormValidator('post');
+
+        $formVal->isValidRecaptcha('secret');
+
+        $this->assertSame(['g-recaptcha-response' => 'Please complete the reCAPTCHA verification'], $formVal->getErrors());
+    }
+
+    public function testIsValidRecaptchaUsesDefaultFailedMessage(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => false];
+
+        $formVal->isValidRecaptcha('secret');
+
+        $this->assertSame(['g-recaptcha-response' => 'reCAPTCHA verification failed, please try again'], $formVal->getErrors());
+    }
+
+    // verifyRecaptcha() ------------------------------------------------------------------
+
+    public function testVerifyRecaptchaWritesCustomMissingMessageToCustomErrorKey(): void
+    {
+        $formVal = new TestableMyFormValidator('post');
+
+        $this->assertFalse($formVal->verifyRecaptcha('secret', 0.5, null, null, 'g-recaptcha-response', 'frmContact', 'Missing token', 'Failed token'));
+        $this->assertSame(['frmContact' => 'Missing token'], $formVal->getErrors());
+    }
+
+    public function testVerifyRecaptchaWritesCustomFailedMessageToCustomErrorKey(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.1];
+
+        $this->assertFalse($formVal->verifyRecaptcha('secret', 0.5, null, null, 'g-recaptcha-response', 'frmContact', 'Missing token', 'Failed token'));
+        $this->assertSame(['frmContact' => 'Failed token'], $formVal->getErrors());
+    }
+
+    public function testVerifyRecaptchaDefaultsErrorKeyToFieldNameAndDefaultMessages(): void
+    {
+        $_POST['my_recaptcha_token'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => false];
+
+        $this->assertFalse($formVal->verifyRecaptcha('secret', 0.5, null, null, 'my_recaptcha_token'));
+        $this->assertSame(['my_recaptcha_token' => 'reCAPTCHA verification failed, please try again'], $formVal->getErrors());
+    }
+
+    public function testVerifyRecaptchaPassesAndWritesNoErrorOnSuccess(): void
+    {
+        $_POST['g-recaptcha-response'] = 'token';
+
+        $formVal = new TestableMyFormValidator('post');
+        $formVal->recaptchaResponse = ['success' => true, 'score' => 0.9, 'hostname' => 'example.com', 'action' => 'submit'];
+
+        $this->assertTrue($formVal->verifyRecaptcha('secret', 0.5, ['example.com'], 'submit', 'g-recaptcha-response', 'frmContact', 'Missing', 'Failed'));
+        $this->assertSame([], $formVal->getErrors());
+    }
 }
