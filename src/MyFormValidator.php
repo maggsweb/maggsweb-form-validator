@@ -520,7 +520,7 @@ class MyFormValidator
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_TIMEOUT, 5);
         $response = curl_exec($ch);
-        curl_close($ch);
+        // No curl_close(): handles are freed automatically since PHP 8.0, and it's deprecated in 8.5
 
         if ($response === false) {
             return [];
