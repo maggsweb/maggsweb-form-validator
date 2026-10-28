@@ -94,12 +94,17 @@ class MyFileValidator
     }
 
     /**
+     * Set any of the 'path', 'allow', 'deny' and 'maxFilesize' options.
+     * Unknown keys are ignored (PHP 8.2+ deprecates creating dynamic properties).
+     *
      * @param array $optionsArray
      */
     public function setOptions(array $optionsArray): void
     {
         foreach ($optionsArray as $name => $value) {
-            $this->$name = $value;
+            if (in_array($name, ['path', 'allow', 'deny', 'maxFilesize'], true)) {
+                $this->$name = $value;
+            }
         }
     }
 
